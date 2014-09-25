@@ -1,0 +1,2 @@
+#!/bin/bash
+node featureservice2trigger --clientId=0luUVke61tJEvonb --clientSecret=3dd989b1cccf492aa5772bee221fba9a --tag=promociones --tag=restaurantes --serviceUrl="http://services.arcgis.com/Q6ZFRRvMTlsTTFuP/arcgis/rest/services/BigOffer/FeatureServer/0" --notificationTemplate="{{msg}}"
