@@ -1,31 +1,40 @@
-import arcpy
-import arcrest
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import json
-import requests
+import unirest
 
+print "Retrieving: new offers"
 spreadsheet = "https://spreadsheets.google.com/feeds/list/1VPHB9pRPCbG6icFp2KhXRhOA7wA5I3K6khOoYBW24CQ/od6/public/values?alt=json"
 
-response = requests.get(spreadsheet)
-json_data = json.loads(response.text)
+response = unirest.get(spreadsheet)
 
+features = []
 
+for e in response.body["feed"]["entry"]:
 
-try:
-    fc = r"<some feature class>"
-    url = "<service URL>"
-    username = "<username>"
-    password = "<password>"
-
-    fl = arcrest.agol.layer.FeatureLayer(url=url, username=username, password=password)
-
-    features = arcrest.agol.common.Feature.fc_to_features(fc)
+	tmp = {
+		"geometry" : {
+			"x": float(e["gsx$longitud"]["$t"].encode('utf-8')),
+			"y": float(e["gsx$latitud"]["$t"].encode('utf-8'))
+		},
+	    "attributes" : {
+	      "img" : e["gsx$imagenopcional"]["$t"].encode('utf-8'),
+	      "msg" : e["gsx$texto"]["$t"].encode('utf-8')
+	    }
+	}
+	features.append(tmp)
 	
-	#json_data["feed"]["entry"] for y anadir
-    print fl.addFeature(features=features)
+#url = "http://httpbin.org/post"
+url = "http://services.arcgis.com/Q6ZFRRvMTlsTTFuP/arcgis/rest/services/BigOffer/FeatureServer/0/addFeatures"
+headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
-except ValueError, e:
-    print e
+# Documentacion
+# http://resources.arcgis.com/en/help/arcgis-rest-api/index.html#/Add_Features/02r30000010m000000/
+data = {
+	"features" : features
+}
 
-#launch featureservice2trigger
-# node featureservice2trigger --clientId=0luUVke61tJEvonb --clientSecret=3dd989b1cccf492aa5772bee221fba9a --tag=promociones --tag=restaurantes --serviceUrl="http://services.arcgis.com/Q6ZFRRvMTlsTTFuP/arcgis/rest/services/BigOffer/FeatureServer/0" --notificationTemplate="Welcome to {{msg}}"
+print "Updating: feature service"
+r = unirest.post(url, headers={ "Accept": "application/json" }, params=data)
 
+#print json.dumps(r.body)
